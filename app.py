@@ -9,10 +9,10 @@ from stem.control import Controller
 URL_TO_VISIT = os.environ.get("TARGET_URL", "https://colle-pedia.blogspot.com/")
 RUNNER_ID = os.environ.get("RUNNER_ID", "1")
 TOR_SOCKS5 = os.environ.get("PROXY_URL", "socks5://127.0.0.1:9050")
-
+CONTROL_PORT = os.environ.get("CONTROL_PORT", 9151)
 async def signal_newnym():
     try:
-        with Controller.from_port(port=9051) as controller:
+        with Controller.from_port(port=CONTROL_PORT) as controller:
             controller.authenticate()
             controller.signal(Signal.NEWNYM)
             print(f"[Runner {RUNNER_ID}] Tor NEWNYM signal sent successfully.")
