@@ -53,6 +53,7 @@ jobs:
           EOF'
 
           echo "🚀 Starting..."
+          sudo pkill -f tor || true
           sudo tor -f /etc/tor/torrc &
           TOR_PID=$!
 
