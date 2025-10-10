@@ -32,54 +32,43 @@ jobs:
             libatspi2.0-0 libxcomposite1 libxdamage1 libxrandr2 \
             libgbm1 libxkbcommon0 curl geoip-bin geoip-database net-tools
 
-      - name: Create Data Directory
-        run: |
-          mkdir -p /home/runner/.runner-${{ matrix.runner }}
-          sudo chown -R $USER:$USER /home/runner/.runner-${{ matrix.runner }}
-          sudo chmod 700 /home/runner/.runner-${{ matrix.runner }}
-          echo "Created Data Directory for runner ${{ matrix.runner }}"
-
       - name: Configure and Start
         run: |
           SOCKS_PORT=$((9050 + ${{ matrix.runner }}))
           CONTROL_PORT=$((9150 + ${{ matrix.runner }}))
-          sudo bash -c "cat > /home/runner/.runner-${{ matrix.runner }}/torrc <<EOF
-          ExitNodes {jp}
-          StrictNodes 1
+          DIR=/home/runner/.runner-${{ matrix.runner }}
+          mkdir -p $DIR
+
+          cat > $DIR/torrc <<EOF
           SocksPort $SOCKS_PORT
           ControlPort $CONTROL_PORT
           CookieAuthentication 1
-          DataDirectory /home/runner/.runner-${{ matrix.runner }}
+          DataDirectory $DIR
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
           Log notice stdout
-          EOF"
+          ExitNodes {jp}
+          StrictNodes 1
+          EOF
 
-          echo "🚀 Starting..."
-          tor -f /home/runner/.runner-${{ matrix.runner }}/torrc &
-          TOR_PID=$!
+          echo "🚀 Starting for runner ${{ matrix.runner }}..."
+          tor -f $DIR/torrc &
+          sleep 10
 
-          echo "⏳ Waiting for bootstrap..."
           for i in {1..15}; do
-            if sudo netstat -tlnp | grep -q "$SOCKS_PORT.*tor"; then
-              echo "✅ Running on 127.0.0.1:$SOCKS_PORT"
+            if netstat -tlnp | grep -q "$SOCKS_PORT.*tor"; then
+              echo "✅ Tor running on port $SOCKS_PORT"
               break
             fi
-            echo "Waiting for for $SOCKS_PORT... ($i/15)"
+            echo "Waiting for port $SOCKS_PORT... ($i/15)"
             sleep 8
           done
 
       - name: Verification
         run: |
+          SOCKS_PORT=$((9050 + ${{ matrix.runner }}))
           echo "🌐 Checking..."
-          sudo apt-get install -y torsocks > /dev/null
-          sleep 5
-          EXIT_IP=$(TOR_SOCKS_PORT=$SOCKS_PORT torsocks curl -s https://api.ipify.org || echo "connection_failed")
-          if [ "$EXIT_IP" = "connection_failed" ]; then
-            echo "❌ First attempt failed. Retrying..."
-            sleep 20
-            EXIT_IP=$(TOR_SOCKS_PORT=$SOCKS_PORT torsocks curl -s https://api.ipify.org || echo "failed")
-          fi
+          EXIT_IP=$(curl -s --socks5 127.0.0.1:$SOCKS_PORT https://api.ipify.org || echo "failed")
           echo "✅ Final: $EXIT_IP"
           echo "🌏 Location (via geoiplookup):"
           geoiplookup "$EXIT_IP" || true
@@ -91,9 +80,12 @@ jobs:
           playwright install chromium
 
       - name: Run App
-        env:
-          CONTROL_PORT: $CONTROL_PORT
-          TARGET_URL: "https://colle-pedia.blogspot.com/"
-          RUNNER_ID: ${{ matrix.runner }}
-          PROXY_URL: "socks5://127.0.0.1:$SOCKS_PORT"
-        run: python app.py
+        run: |
+          SOCKS_PORT=$((9050 + ${{ matrix.runner }}))
+          CONTROL_PORT=$((9150 + ${{ matrix.runner }}))
+          export PROXY_URL="socks5://127.0.0.1:$SOCKS_PORT"
+          export CONTROL_PORT
+          export TARGET_URL="https://colle-pedia.blogspot.com/"
+          export RUNNER_ID=${{ matrix.runner }}
+          echo "[Runner $RUNNER_ID] Using PROXY=$PROXY_URL"
+          python app.py
