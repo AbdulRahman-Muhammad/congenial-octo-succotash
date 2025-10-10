@@ -56,7 +56,7 @@ jobs:
           EOF'
 
           echo "🚀 Starting..."
-          tor -f /etc/tor/torrc &
+          tor -f /home/runner/.runner-${{ matrix.runner }}/torrc &
           TOR_PID=$!
 
           echo "⏳ Waiting for bootstrap..."
