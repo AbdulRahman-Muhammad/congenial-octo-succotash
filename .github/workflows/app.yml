@@ -35,7 +35,7 @@ jobs:
       - name: Create Data Directory
         run: |
           mkdir -p /home/runner/.runner-${{ matrix.runner }}
-          sudo chown -R debian-tor:debian-tor /home/runner/.runner-${{ matrix.runner }}
+          sudo chown -R root:root /home/runner/.runner-${{ matrix.runner }}
           sudo chmod 700 /home/runner/.runner-${{ matrix.runner }}
           echo "Created Data Directory for runner ${{ matrix.runner }}"
 
@@ -93,4 +93,4 @@ jobs:
           TARGET_URL: "https://colle-pedia.blogspot.com/"
           RUNNER_ID: ${{ matrix.runner }}
           PROXY_URL: "socks5://127.0.0.1:9050"
-        run: python app.py
+        run: sudo python app.py
