@@ -34,10 +34,10 @@ jobs:
 
       - name: Create Data Directory
         run: |
-          mkdir -p /home/runner/.tor-${{ matrix.runner }}
-          sudo chown -R debian-tor:debian-tor /home/runner/.tor-${{ matrix.runner }}
-          sudo chmod 700 /home/runner/.tor-${{ matrix.runner }}
-          echo "Created Tor DataDirectory for runner ${{ matrix.runner }}"
+          mkdir -p /home/runner/.runner-${{ matrix.runner }}
+          sudo chown -R debian-tor:debian-tor /home/runner/.runner-${{ matrix.runner }}
+          sudo chmod 700 /home/runner/.runner-${{ matrix.runner }}
+          echo "Created Data Directory for runner ${{ matrix.runner }}"
 
       - name: Configure and Start
         run: |
@@ -46,7 +46,7 @@ jobs:
           StrictNodes 1
           ControlPort 9051
           SocksPort 9050
-          DataDirectory /home/runner/.tor-${{ matrix.runner }}
+          DataDirectory /home/runner/.runner-${{ matrix.runner }}
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
           Log notice stdout
