@@ -39,7 +39,7 @@ jobs:
           sudo chmod 700 /home/runner/.tor-${{ matrix.runner }}
           echo "Created Tor DataDirectory for runner ${{ matrix.runner }}"
 
-      - name: Configure and Start Tor
+      - name: Configure and Start
         run: |
           sudo bash -c 'cat > /etc/tor/torrc <<EOF
           ExitNodes {JP}
