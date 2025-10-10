@@ -35,17 +35,18 @@ jobs:
       - name: Create Data Directory
         run: |
           mkdir -p /home/runner/.runner-${{ matrix.runner }}
-          sudo chown -R root:root /home/runner/.runner-${{ matrix.runner }}
+          sudo chown -R $USER:$USER /home/runner/.runner-${{ matrix.runner }}
           sudo chmod 700 /home/runner/.runner-${{ matrix.runner }}
           echo "Created Data Directory for runner ${{ matrix.runner }}"
 
       - name: Configure and Start
         run: |
           sudo bash -c 'cat > /etc/tor/torrc <<EOF
-          ExitNodes {JP}
+          ExitNodes {jp}
           StrictNodes 1
           ControlPort 9051
           SocksPort 9050
+          CookieAuthentication 1
           DataDirectory /home/runner/.runner-${{ matrix.runner }}
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
@@ -54,7 +55,7 @@ jobs:
 
           echo "🚀 Starting..."
           sudo pkill -f tor || true
-          sudo tor -f /etc/tor/torrc &
+          tor -f /etc/tor/torrc &
           TOR_PID=$!
 
           echo "⏳ Waiting for bootstrap..."
