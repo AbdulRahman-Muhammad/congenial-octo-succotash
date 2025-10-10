@@ -61,11 +61,11 @@ jobs:
 
           echo "⏳ Waiting for bootstrap..."
           for i in {1..15}; do
-            if sudo netstat -tlnp | grep -q "9050.*tor"; then
-              echo "✅ Running on 127.0.0.1:9050"
+            if sudo netstat -tlnp | grep -q "$SOCKS_PORT.*tor"; then
+              echo "✅ Running on 127.0.0.1:$SOCKS_PORT"
               break
             fi
-            echo "Waiting for for 9050... ($i/15)"
+            echo "Waiting for for $SOCKS_PORT... ($i/15)"
             sleep 8
           done
 
