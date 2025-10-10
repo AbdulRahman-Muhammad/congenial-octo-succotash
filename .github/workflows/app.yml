@@ -74,11 +74,11 @@ jobs:
           echo "🌐 Checking..."
           sudo apt-get install -y torsocks > /dev/null
           sleep 5
-          EXIT_IP=$(torsocks curl -s https://api.ipify.org || echo "connection_failed")
+          EXIT_IP=$(TOR_SOCKS_PORT=$SOCKS_PORT torsocks curl -s https://api.ipify.org || echo "connection_failed")
           if [ "$EXIT_IP" = "connection_failed" ]; then
             echo "❌ First attempt failed. Retrying..."
             sleep 20
-            EXIT_IP=$(torsocks curl -s https://api.ipify.org || echo "failed")
+            EXIT_IP=$(TOR_SOCKS_PORT=$SOCKS_PORT torsocks curl -s https://api.ipify.org || echo "failed")
           fi
           echo "✅ Final: $EXIT_IP"
           echo "🌏 Location (via geoiplookup):"
