@@ -1,0 +1,81 @@
+name: Workflow App
+
+on:
+  schedule:
+    - cron: '* */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-visits:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        runner: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tor tor-geoipdb \
+            libnss3 libnspr4 libcups2 libatk1.0-0 libatk-bridge2.0-0 \
+            libatspi2.0-0 libxcomposite1 libxdamage1 libxrandr2 \
+            libgbm1 libxkbcommon0 curl geoip-bin geoip-database
+
+      - name: Create Data Directory
+        run: |
+          mkdir -p /home/runner/.tor-${{ matrix.runner }}
+          sudo chown -R debian-tor:debian-tor /home/runner/.tor-${{ matrix.runner }}
+          sudo chmod 700 /home/runner/.tor-${{ matrix.runner }}
+          echo "Created Tor DataDirectory for runner ${{ matrix.runner }}"
+
+      - name: Configure and Start
+        run: |
+          sudo bash -c 'cat > /etc/tor/torrc <<EOF
+          ExitNodes {JP}
+          StrictNodes 1
+          ControlPort 9051
+          DataDirectory /home/runner/.tor-${{ matrix.runner }}
+          GeoIPFile /usr/share/tor/geoip
+          GeoIPv6File /usr/share/tor/geoip6
+          Log notice stdout
+          EOF'
+
+          echo "Starting Tor with Japanese Exit Node..."
+          sudo service tor restart
+          sleep 45
+
+          echo "Checking Tor process:"
+          sudo systemctl status tor || true
+
+      - name: Test Check
+        run: |
+          echo "Checking Exit IP through Tor..."
+          sudo apt-get install -y torsocks > /dev/null
+          EXIT_IP=$(torsocks curl -s https://api.ipify.org)
+          echo "Exit IP: $EXIT_IP"
+          echo "Location (via geoiplookup):"
+          geoiplookup "$EXIT_IP"
+
+      - name: Install Second Dependecies
+        run: |
+          python -m pip install --upgrade pip
+          pip install stem playwright
+          playwright install chromium
+
+      - name: Run App
+        env:
+          TARGET_URL: "https://colle-pedia.blogspot.com/"
+          RUNNER_ID: ${{ matrix.runner }}
+          PROXY_URL: "socks5://127.0.0.1:9050"
+        run: python app.py
