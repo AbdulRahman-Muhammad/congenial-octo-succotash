@@ -43,7 +43,7 @@ jobs:
         run: |
           SOCKS_PORT=$((9050 + ${{ matrix.runner }}))
           CONTROL_PORT=$((9150 + ${{ matrix.runner }}))
-          sudo bash -c 'cat > /home/runner/.runner-${{ matrix.runner }}/torrc <<EOF
+          sudo bash -c "cat > /home/runner/.runner-${{ matrix.runner }}/torrc <<EOF
           ExitNodes {jp}
           StrictNodes 1
           SocksPort $SOCKS_PORT
@@ -53,7 +53,7 @@ jobs:
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
           Log notice stdout
-          EOF'
+          EOF"
 
           echo "🚀 Starting..."
           tor -f /home/runner/.runner-${{ matrix.runner }}/torrc &
