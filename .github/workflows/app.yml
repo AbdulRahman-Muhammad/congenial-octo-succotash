@@ -52,25 +52,23 @@ jobs:
           Log notice stdout
           EOF'
 
-          echo "🚀 Starting Tor with Japanese Exit Node..."
-          sudo service tor restart
+          echo "🚀 Starting..."
+          sudo tor -f /etc/tor/torrc &
+          TOR_PID=$!
 
-          echo "⏳ Waiting for Tor bootstrap..."
+          echo "⏳ Waiting for bootstrap..."
           for i in {1..15}; do
             if sudo netstat -tlnp | grep -q "9050.*tor"; then
-              echo "✅ Tor SOCKS5 proxy is running on 127.0.0.1:9050"
+              echo "✅ Running on 127.0.0.1:9050"
               break
             fi
-            echo "Waiting for Tor to open port 9050... ($i/15)"
+            echo "Waiting for for 9050... ($i/15)"
             sleep 8
           done
 
-          echo "Checking Tor process status:"
-          sudo systemctl status tor || true
-
-      - name: Verify Tor Exit Node
+      - name: Verification
         run: |
-          echo "🌐 Checking Exit IP through Tor..."
+          echo "🌐 Checking..."
           sudo apt-get install -y torsocks > /dev/null
           sleep 5
           EXIT_IP=$(torsocks curl -s https://api.ipify.org || echo "connection_failed")
@@ -79,7 +77,7 @@ jobs:
             sleep 20
             EXIT_IP=$(torsocks curl -s https://api.ipify.org || echo "failed")
           fi
-          echo "✅ Final Exit IP: $EXIT_IP"
+          echo "✅ Final: $EXIT_IP"
           echo "🌏 Location (via geoiplookup):"
           geoiplookup "$EXIT_IP" || true
 
