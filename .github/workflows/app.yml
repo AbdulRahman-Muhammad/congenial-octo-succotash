@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-visits:
+  run:
     runs-on: ubuntu-latest
 
     strategy:
@@ -41,11 +41,13 @@ jobs:
 
       - name: Configure and Start
         run: |
-          sudo bash -c 'cat > /etc/tor/torrc <<EOF
+          SOCKS_PORT=$((9050 + ${{ matrix.runner }}))
+          CONTROL_PORT=$((9150 + ${{ matrix.runner }}))
+          sudo bash -c 'cat > /home/runner/.runner-${{ matrix.runner }}/torrc <<EOF
           ExitNodes {jp}
           StrictNodes 1
-          ControlPort 9051
-          SocksPort 9050
+          SocksPort $SOCKS_PORT
+          ControlPort $CONTROL_PORT
           CookieAuthentication 1
           DataDirectory /home/runner/.runner-${{ matrix.runner }}
           GeoIPFile /usr/share/tor/geoip
@@ -54,7 +56,6 @@ jobs:
           EOF'
 
           echo "🚀 Starting..."
-          sudo pkill -f tor || true
           tor -f /etc/tor/torrc &
           TOR_PID=$!
 
@@ -91,7 +92,8 @@ jobs:
 
       - name: Run App
         env:
+          CONTROL_PORT: $CONTROL_PORT
           TARGET_URL: "https://colle-pedia.blogspot.com/"
           RUNNER_ID: ${{ matrix.runner }}
-          PROXY_URL: "socks5://127.0.0.1:9050"
+          PROXY_URL: "socks5://127.0.0.1:$SOCKS_PORT"
         run: python app.py
