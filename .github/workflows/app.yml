@@ -2,7 +2,7 @@ name: Workflow App
 
 on:
   schedule:
-    - cron: '0 */5 * * *'
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install -y tor tor-geoipdb \
             libnss3 libnspr4 libcups2 libatk1.0-0 libatk-bridge2.0-0 \
             libatspi2.0-0 libxcomposite1 libxdamage1 libxrandr2 \
-            libgbm1 libxkbcommon0 curl geoip-bin geoip-database
+            libgbm1 libxkbcommon0 curl geoip-bin geoip-database net-tools
 
       - name: Create Data Directory
         run: |
@@ -39,35 +39,51 @@ jobs:
           sudo chmod 700 /home/runner/.tor-${{ matrix.runner }}
           echo "Created Tor DataDirectory for runner ${{ matrix.runner }}"
 
-      - name: Configure and Start
+      - name: Configure and Start Tor
         run: |
           sudo bash -c 'cat > /etc/tor/torrc <<EOF
           ExitNodes {JP}
           StrictNodes 1
           ControlPort 9051
+          SocksPort 9050
           DataDirectory /home/runner/.tor-${{ matrix.runner }}
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
           Log notice stdout
           EOF'
 
-          echo "Starting Tor with Japanese Exit Node..."
+          echo "🚀 Starting Tor with Japanese Exit Node..."
           sudo service tor restart
-          sleep 45
 
-          echo "Checking Tor process:"
+          echo "⏳ Waiting for Tor bootstrap..."
+          for i in {1..15}; do
+            if sudo netstat -tlnp | grep -q "9050.*tor"; then
+              echo "✅ Tor SOCKS5 proxy is running on 127.0.0.1:9050"
+              break
+            fi
+            echo "Waiting for Tor to open port 9050... ($i/15)"
+            sleep 8
+          done
+
+          echo "Checking Tor process status:"
           sudo systemctl status tor || true
 
-      - name: Test Check
+      - name: Verify Tor Exit Node
         run: |
-          echo "Checking Exit IP through Tor..."
+          echo "🌐 Checking Exit IP through Tor..."
           sudo apt-get install -y torsocks > /dev/null
-          EXIT_IP=$(torsocks curl -s https://api.ipify.org)
-          echo "Exit IP: $EXIT_IP"
-          echo "Location (via geoiplookup):"
-          geoiplookup "$EXIT_IP"
+          sleep 5
+          EXIT_IP=$(torsocks curl -s https://api.ipify.org || echo "connection_failed")
+          if [ "$EXIT_IP" = "connection_failed" ]; then
+            echo "❌ First attempt failed. Retrying..."
+            sleep 20
+            EXIT_IP=$(torsocks curl -s https://api.ipify.org || echo "failed")
+          fi
+          echo "✅ Final Exit IP: $EXIT_IP"
+          echo "🌏 Location (via geoiplookup):"
+          geoiplookup "$EXIT_IP" || true
 
-      - name: Install Second Dependecies
+      - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install stem playwright
