@@ -47,10 +47,8 @@ jobs:
           DataDirectory $DIR
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
-          Log notice stdout
-          EntryNodes {jp},{kr}
-          ExitNodes {jp},{kr}
-          ExcludeExitNodes {kr}
+          RunAsDeamon 1
+          ExitNodes {jp}
           StrictNodes 1
           GeoIPExcludeUnknown 1
           UseBridges 0
