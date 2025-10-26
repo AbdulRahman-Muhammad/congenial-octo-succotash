@@ -47,8 +47,7 @@ jobs:
           DataDirectory $DIR
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
-          ExitNodes {jp}
-          StrictNodes 1
+          ExitNodes 172.233.82.41
           GeoIPExcludeUnknown 1
           UseBridges 0
           ClientUseIPv4 1
