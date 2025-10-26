@@ -72,7 +72,6 @@ async def visit_with_browser():
 async def main():
     while True:
         await visit_with_browser()
-        await signal_newnym()
 
 if __name__ == "__main__":
     asyncio.run(main())
