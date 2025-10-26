@@ -57,7 +57,6 @@ jobs:
           ClientUseIPv4 1
           ClientUseIPv6 1
           AvoidDiskWrites 1
-          RunAsDaemon 1
           EOF
 
           echo "🚀 Starting for runner ${{ matrix.runner }}..."
