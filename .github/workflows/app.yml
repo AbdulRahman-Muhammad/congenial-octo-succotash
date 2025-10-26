@@ -48,13 +48,16 @@ jobs:
           GeoIPFile /usr/share/tor/geoip
           GeoIPv6File /usr/share/tor/geoip6
           Log notice stdout
-          ExitNodes {jp}
+          EntryNodes {jp},{kr}
+          ExitNodes {jp},{kr}
+          ExcludeExitNodes {kr}
           StrictNodes 1
           GeoIPExcludeUnknown 1
           UseBridges 0
           ClientUseIPv4 1
           ClientUseIPv6 1
           AvoidDiskWrites 1
+          RunAsDaemon 1
           EOF
 
           echo "🚀 Starting for runner ${{ matrix.runner }}..."
