@@ -2,8 +2,6 @@ import asyncio
 from playwright.async_api import async_playwright
 import random
 import os
-import hashlib
-import time
 from urllib.parse import urlparse, urljoin
 from stem import Signal
 from stem.control import Controller
@@ -12,45 +10,6 @@ URL_TO_VISIT = os.environ.get("TARGET_URL", "https://colle-pedia.blogspot.com/")
 RUNNER_ID = os.environ.get("RUNNER_ID", "1")
 TOR_SOCKS5 = os.environ.get("PROXY_URL", "socks5://127.0.0.1:9051")
 CONTROL_PORT = int(os.environ.get("CONTROL_PORT", "9151"))
-
-USER_AGENTS = [
-    # Samsung
-    "Mozilla/5.0 (Linux; Android 14; SM-S928B Build/UKQ1.240121.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.93 Mobile Safari/537.36",
-    
-    # Sony
-    "Mozilla/5.0 (Linux; Android 14; Xperia 1 V Build/TP1A.220624.009) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.207 Mobile Safari/537.36",
-    
-    # Realme
-    "Mozilla/5.0 (Linux; Android 14; RMX3850 Build/UP1A.231005.007) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.207 Mobile Safari/537.36",
-    
-    # Xiaomi
-    "Mozilla/5.0 (Linux; Android 14; 22127RK46C Build/UKQ1.230919.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.93 Mobile Safari/537.36",
-    
-    # Sharp
-    "Mozilla/5.0 (Linux; Android 14; AQUOS R8 Build/SC36B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.7339.207 Mobile Safari/537.36",
-    
-    # Fujitsu
-    "Mozilla/5.0 (Linux; Android 13; F-51B Build/V72RD50C) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.39 Mobile Safari/537.36",
-    
-    # iPhone (iOS)
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/605.1.15",
-    
-    # Windows 11
-    "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/141.0.7390.58 Safari/537.36",
-    
-    # macOS 15 (Apple Silicon)
-    "Mozilla/5.0 (Macintosh; Apple Silicon Mac OS X 15_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
-    
-    # Linux Desktop (Ubuntu)
-    "Mozilla/5.0 (X11; Linux x86_64; Ubuntu 24.04) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.93 Safari/537.36"
-]
-
-def get_ua():
-    seed = hashlib.sha256(f"{time.time_ns()}-{os.urandom(16)}".encode()).hexdigest()
-    random.seed(int(seed, 16))
-    random.shuffle(USER_AGENTS)
-    ua = random.choice(USER_AGENTS)
-    return ua
 
 async def signal_newnym():
     try:
@@ -75,7 +34,8 @@ async def visit_with_browser():
                 args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
             )
             context = await browser.new_context(
-                user_agent=get_ua()
+                user_agent=f"Mozilla/5.0 (Windows NT 11.0; Win64; x64) "
+                           f"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.{random.randint(0,9999)} Safari/537.36"
             )
             page = await context.new_page()
 
